@@ -1,4 +1,5 @@
-
+# import slicer 
+# import vtkSegmentationCore
 import os 
 import random
 import unittest 
@@ -7,10 +8,11 @@ class AdvanceEditorlabeling():
         super().__init__(*args, **kwargs)
         self.label= []
         self.layer = []
-        self.status = self.load_default_label()
         self.home = os.path.expanduser('~')
-        self.labeltargetdir= str(home)+"/SlicerLabel"
-        self.defaultlabel=str(self.labeltargetdir)+"/defaultlabel.slc"
+        self.labeltargetdir= os.path.join(str(self.home),"SlicerLabel")
+        self.defaultlabel = os.path.join(str(self.labeltargetdir),"defaultlabel.txt")
+        self.status = False
+        # self.inputSegmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
 
     def import_labeltext(self,labelfile):
         # import layer from file 
@@ -32,16 +34,19 @@ class AdvanceEditorlabeling():
         self.layer = layers
         return layers
     
-    def AddLayer(self):
+    def add_layer(self):
         # add layer to slicer
         pass 
     
-    def SaveLayer(self):
+    def save_layer(self):
         # save defualt layer
         if self.status:
-            pass
+            with open(self.defaultlabel,"w+") as labelfile:
+                labelfile.write(str(self.get_layer_index()))
+                labelfile.close()
         else:
-            pass
+            self.layer_initiator()
+        return self.status
 
 
     
@@ -51,10 +56,10 @@ class AdvanceEditorlabeling():
 
     def load_default_label(self):
         #check for default layer
-        if os.path.exists(self.defaultlabel):
-            self.status = True
+        if self.status:
+            pass 
         else:
-            self.status = False
+            pass 
         return self.status
     
     def layer_initiator(self):
@@ -63,19 +68,37 @@ class AdvanceEditorlabeling():
         if not os.path.exists(self.defaultlabel):
             labels=open(self.defaultlabel,"w")
             labels.close()
-        self.status = True
+        self.default_label_exist()
         return self.status 
+    
+    def default_label_exist(self):
+        if os.path.exists(self.defaultlabel):
+            self.status = True
+        else:
+            self.status = False
+        return self.status
 
-class AdvanceEditorlabelingTest(unittest.TestCase):
-    def __init__(self, methodName):
-        super().__init__(methodName)
-        self.test = AdvanceEditorlabeling()
+    def get_layer_index(self):
+        # get layer index from slicer 
+        return self.layer 
 
-    def test_import_labeltext(self):
-        self.assertEquals(self.test.import_labeltext("Test/LabelText.txt"),["label1","label2","label3"])
+# class AdvanceEditorlabelingTest(unittest.TestCase):
+#     def __init__(self, methodName):
+#         super().__init__(methodName)
+#         self.test = AdvanceEditorlabeling()
+
+#     def test_import_labeltext(self):
+#         self.assertEquals(self.test.import_labeltext("Test/LabelText.txt"),["label1","label2","label3"])
 
 
 if __name__ == '__main__':
-    unittest.main()
-    # test = AdvanceEditorlabeling()
-    # print(test.ImportLabeltext("project/Lab Project/slicer_image_labeling_extention/Test/LabelText.txt"))
+    # unittest.main()
+    a = AdvanceEditorlabeling()
+    a.import_labeltext("Test/LabelText.txt")
+    print(a.label)
+    print(a.Label2layer())
+    # print(a.layer)
+    print(a.defaultlabel)
+    print(a.default_label_exist())
+    print(a.save_layer())
+    
