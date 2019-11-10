@@ -15,7 +15,7 @@ class AdvancelabelingEditor():
         # self.inputSegmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
 
     def import_labeltext(self,labelfile):
-        # import layer from file 
+        # import label from file 
         labelfile = os.path.abspath(labelfile)
         with open(labelfile,"r") as labelfile:
             for label in labelfile.read().split(" "):
