@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ImageLabelingExtention)
+project(Image Labeling Extention)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
