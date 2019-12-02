@@ -1,6 +1,7 @@
 import os
 import random
 import unittest
+import csv
 import vtk, qt, ctk, slicer
 import vtkSegmentationCore
 from slicer.ScriptedLoadableModule import *
@@ -47,7 +48,6 @@ class ImageLabelingWidget(ScriptedLoadableModuleWidget):
     self.labeltargetdir= os.path.join(str(self.home),"SlicerLabel")
     self.defaultlabel = os.path.join(str(self.labeltargetdir),"defaultlabel.txt")
     self.status = self.default_label_exist()
-    self.inputSegmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
 
     ScriptedLoadableModuleWidget.setup(self)
 
@@ -84,7 +84,7 @@ class ImageLabelingWidget(ScriptedLoadableModuleWidget):
     self.importLayerButton = qt.QPushButton("Import layer")
     self.importLayerButton.toolTip = "import layer from file."
     self.importLayerButton.enabled = True
-    parametersFormLayout.addRow(self.importLabelButton)
+    parametersFormLayout.addRow(self.importLayerButton)
     #
     # Save Button
     #
@@ -105,6 +105,7 @@ class ImageLabelingWidget(ScriptedLoadableModuleWidget):
     
     # self.applyButton.connect('clicked(bool)', self.onApplyButton)
     self.importLabelButton.connect('clicked(bool)', self.onImportLabelButton)
+    self.IDLButton.connect('clicked(bool)', self.onIDLButton)
 
     # self.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
     # self.outputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelect)
@@ -125,7 +126,9 @@ class ImageLabelingWidget(ScriptedLoadableModuleWidget):
   #   self.applyButton.enabled = self.inputSelector.currentNode() and self.outputSelector.currentNode()
 
   def onIDLButton(self):
-    pass
+    self.load_default_label()
+    self.add_layer()
+
 
   def onImportLabelButton(self):
     # import label from file 
@@ -175,9 +178,10 @@ class ImageLabelingWidget(ScriptedLoadableModuleWidget):
         if self.status:
             if os.path.getsize(str(self.defaultlabel)):
                 with open(self.defaultlabel,"r") as labels:
-                    layer = labels.read()
-                    self.layer = layer
-                    print(self.layer)
+                  layer = csv.DictReader(labels,delimiter=',')
+                  self.dict2layer(layer)                    
+                  print(self.layer)
+
         else:
             self.layer_initiator()
         return self.status
@@ -190,22 +194,34 @@ class ImageLabelingWidget(ScriptedLoadableModuleWidget):
         return layers
   def add_layer(self):
     # add layer to slicer
+    self.inputSegmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
     for layer in self.layer:
-      print layer[0]
-      print layer[1]
       Segment = vtkSegmentationCore.vtkSegment()
       Segment.SetName(layer[0])
       Segment.SetColor(layer[1])
       self.inputSegmentationNode.GetSegmentation().AddSegment(Segment) 
+
   def save_layer(self):
     # save defualt layer
     if self.status:
         with open(self.defaultlabel,"w+") as labelfile:
-            labelfile.write(str(self.layer))
+            fieldnames = ['label', 'color1', 'color2','color3']
+            writer = csv.DictWriter(labelfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for layer in self.layer:
+              writer.writerow({'label':layer[0], 'color1':layer[1][0], 'color2':layer[1][1],'color3':layer[1][2]})
             labelfile.close()
     else:
         self.layer_initiator()
     return self.status
+    
+  def dict2layer(self,_dict):
+      layers = []
+      for layer in _dict:
+        layers.append([layer["label"],[float(layer["color1"]),float(layer["color2"]),float(layer["color3"])]])
+        self.layer = layers
+      return layers
+
   # def onApplyButton(self):
   #   logic = ImageLabelingLogic()
   #   enableScreenshotsFlag = self.enableScreenshotsFlagCheckBox.checked
