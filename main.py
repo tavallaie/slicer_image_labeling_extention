@@ -3,7 +3,7 @@
 import os 
 import random
 import unittest 
-class AdvanceEditorlabeling():
+class AdvancelabelingEditor():
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label= []
@@ -11,11 +11,11 @@ class AdvanceEditorlabeling():
         self.home = os.path.expanduser('~')
         self.labeltargetdir= os.path.join(str(self.home),"SlicerLabel")
         self.defaultlabel = os.path.join(str(self.labeltargetdir),"defaultlabel.txt")
-        self.status = False
+        self.status = self.default_label_exist()
         # self.inputSegmentationNode = slicer.mrmlScene.AddNewNodeByClass('vtkMRMLSegmentationNode')
 
     def import_labeltext(self,labelfile):
-        # import layer from file 
+        # import label from file 
         labelfile = os.path.abspath(labelfile)
         with open(labelfile,"r") as labelfile:
             for label in labelfile.read().split(" "):
@@ -42,7 +42,7 @@ class AdvanceEditorlabeling():
         # save defualt layer
         if self.status:
             with open(self.defaultlabel,"w+") as labelfile:
-                labelfile.write(str(self.get_layer_index()))
+                labelfile.write(str(self.layer))
                 labelfile.close()
         else:
             self.layer_initiator()
@@ -57,9 +57,13 @@ class AdvanceEditorlabeling():
     def load_default_label(self):
         #check for default layer
         if self.status:
-            pass 
+            if os.path.getsize(str(self.defaultlabel)):
+                with open(self.defaultlabel,"r") as labels:
+                    layer = labels.read()
+                    self.layer = layer
+                    print(self.layer)
         else:
-            pass 
+            self.layer_initiator()
         return self.status
     
     def layer_initiator(self):
@@ -93,12 +97,13 @@ class AdvanceEditorlabeling():
 
 if __name__ == '__main__':
     # unittest.main()
-    a = AdvanceEditorlabeling()
+    a = AdvancelabelingEditor()
     a.import_labeltext("Test/LabelText.txt")
     print(a.label)
     print(a.Label2layer())
     # print(a.layer)
     print(a.defaultlabel)
     print(a.default_label_exist())
+    print(a.load_default_label())
     print(a.save_layer())
-    
+    print(a.load_default_label())    
